@@ -1,0 +1,34 @@
+apply plugin: 'java'
+apply plugin: 'application'
+
+mainClassName = 'SayHello'
+
+sourceCompatibility = 1.8
+version = '1.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile     group: 'org.apache.commons', name: 'commons-lang3', version:'3.3.2'
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+
+}
+
+task uberjar(type: Jar, dependsOn: [':compileJava']) {
+    from files(sourceSets.main.output.classesDir)
+    from configurations.runtime.asFileTree.files.collect { zipTree(it) }
+
+    manifest {
+        attributes 'Main-Class': mainClassName
+    }
+}
+
+task startDockerInstance(dependsOn: [':test']) {
+    println '---- startDockerInstance ----'
+}
+
+task stopDockerInstance(dependsOn: [':test']) {
+    println '---- stopDockerInstance ----'
+}

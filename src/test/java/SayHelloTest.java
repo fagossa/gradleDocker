@@ -23,13 +23,14 @@ public class SayHelloTest {
         String select="{\n" +
                 "    \"query\": {\n" +
                 "        \"query_string\": {\n" +
-                "            \"query\": \"kill\"\n" +
+                "            \"query\": \"hello\"\n" +
                 "        }\n" +
                 "    }\n" +
                 "}";
         RestApiConsumer consumer = new RestApiConsumer();
         try {
-            consumer.execute(consumer.GET, url + "/example/toto", select);
+            consumer.execute(consumer.POST, url + "/_search", select);
+
             return consumer.getResponse();
         } catch (Exception e) {
             fail();
@@ -40,11 +41,12 @@ public class SayHelloTest {
     @Test
     public void testSayHello(){
         try {
-            SayHello sayHello=new SayHello("{\"say\":\"hello\",\"to\":\"world\"}",url);
+            SayHello sayHello=new SayHello("{\"say\":\"hello\",\"to\":\"world\"}",url+"/example/toto");
         } catch (Exception e) {
             fail();
         };
-        assertTrue(getHello().contains("\"say\":\"hello\""));
+        String response=getHello();
+        assertTrue(response.contains("\"to\":\"world\""));
 
     }
 

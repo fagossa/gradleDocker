@@ -29,13 +29,22 @@ task uberjar(type: Jar, dependsOn: [':compileJava']) {
 }
 
 task startDockerInstance(dependsOn: [':test']) {
-    println '---- startDockerInstance ----'
-    exec {
-        //executable ['docker', 'run', '-d', '-p', '9200:9200', '-p', '9300:9300' ,'-v' ,'/Users/Diana/programacion/ejemplos/gradleDocker/data-dir:/data', 'dockerfile/elasticsearch', '/elasticsearch/bin/elasticsearch', '-Des.config=/data/elasticsearch.yml']
-        executable './startDocker.sh'
-    }
-}
 
-task stopDockerInstance(dependsOn: [':test']) {
-    println '---- stopDockerInstance ----'
+
+    doFirst {
+        println '---- startDockerInstance ----'
+        exec {
+            executable 'docker'
+            args 'run', '-d', '-name', 'testElastic', '-p', '9200:9200', '-p', '9300:9300', '-v', '/Users/Diana/programacion/ejemplos/gradleDocker/data-dir:/data', 'dockerfile/elasticsearch', '/elasticsearch/bin/elasticsearch', '-Des.config=/data/elasticsearch.yml'
+            //executable './startDocker.sh'
+        }
+    }
+    
+    doLast {
+        println '---- stopDockerInstance ----'
+        exec {
+            executable 'docker'
+            args 'rm', '-f', 'testElastic'
+        }
+    }
 }

@@ -2,21 +2,31 @@ apply plugin: 'java'
 apply plugin: 'application'
 apply plugin: 'idea'
 
-
 mainClassName = 'com.docker.test.SayHello'
 
-sourceCompatibility = 1.7
+sourceCompatibility = 1.8
 version = '1.0'
+
+task wrapper(type: Wrapper) {
+    gradleVersion = "2.4"
+}
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    compile     group: 'org.apache.commons', name: 'commons-lang3', version:'3.3.2'
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.3.2'
     compile "org.apache.httpcomponents:httpclient:4.4.1"
     testCompile group: 'junit', name: 'junit', version: '4.11'
 
+}
+
+test {
+    testLogging {
+        showStandardStreams = true
+        events "passed", "skipped", "failed", "standardOut", "standardError"
+    }
 }
 
 task uberjar(type: Jar, dependsOn: [':compileJava']) {
@@ -28,22 +38,76 @@ task uberjar(type: Jar, dependsOn: [':compileJava']) {
     }
 }
 
-task startIntegrationTest(dependsOn: [':test']) {
 
-        println '=> startIntegrationTest'
+task stopES(type: StopDockerTask) << {
+    println '==============='
+    println '=== stopES ===='
+    println '==============='
 
-        def dataDir = new File("src/main/test/data-dir")
-        dataDir.mkdirs()
-        def scriptDir = dataDir.getAbsolutePath()
-        println "execution dir: ${scriptDir}"
-        def proc = "docker run -d --name testElastic -p 9200:9200 -p 9300:9300 -v ${scriptDir}:/data dockerfile/elasticsearch /elasticsearch/bin/elasticsearch -Des.config=/data/elasticsearch.yml".execute()
-        proc.waitForProcessOutput()
+    imgName = 'testElastic'
+}
 
-    doLast {
-        println '=> stopIntegrationTests'
-        exec {
-            executable 'docker'
-            args 'rm', '-f', 'testElastic'
+class StopDockerTask extends DefaultTask {
+    String imgName = 'testElastic'
+
+    @TaskAction
+    def stopContainer() {
+        def sout = new StringBuffer(), serr = new StringBuffer()
+        def procPS = "docker ps -aq --filter=name=${imgName}".execute()
+        procPS.consumeProcessOutput(sout, serr)
+        procPS.waitFor()
+        println "===> Stoping $imgName with id=$sout"
+        if (sout) {
+            println "===> Stoping $imgName with id=$sout"
+            def procST = "docker stop $sout".execute()
+            procST.consumeProcessOutput(sout, serr)
+            procST.waitFor()
+
+            def procRM = "docker rm $sout".execute()
+            procRM.consumeProcessOutput(sout, serr)
+            procRM.waitFor()
         }
     }
 }
+
+//task startES(dependsOn: [":compileTestJava"]) << {
+task startES << {
+    println '==============='
+    println '=== startES ==='
+    println '==============='
+
+    def imgStartName = "testElastic"
+    def sout = new StringBuffer(), serr = new StringBuffer()
+    def proc = "docker run -d --name ${imgStartName} -p 9200:9200 -p 9300:9300 elasticsearch ".execute()
+    proc.consumeProcessOutput(sout, serr)
+    proc.waitFor()
+    println "Started image $imgStartName with id $sout"
+}
+
+// task dependency management
+startES.dependsOn processTestResources
+testClasses.mustRunAfter startES
+
+/*
+test << {
+    // show standard out and standard error of the test JVM(s) on the console
+    testLogging.showStandardStreams = true
+
+    // set JVM arguments for the test JVM(s)
+    jvmArgs '-XX:MaxPermSize=256m'
+
+    // listen to events in the test execution lifecycle
+    beforeTest { descriptor ->
+        logger.lifecycle("Running test: " + descriptor)
+    }
+}
+
+
+tasks.withType(Test) {
+    testLogging {
+        events 'started', 'passed'
+    }
+}
+*/
+
+//startES.finalizedBy stopES

@@ -9,7 +9,7 @@ public class HelloServiceTest extends ESTestRegistry {
 
 	@Before
 	public void onlyOnce() {
-		waitForESAvailability(5);
+		waitForESAvailability(15);
 	}
 
 	@Test
@@ -18,10 +18,13 @@ public class HelloServiceTest extends ESTestRegistry {
 		final String jsonRequest = "{\"say\":\"hello\",\"to\":\"world\"}";
 
 		// when
-		final HelloService service = new HelloService(jsonRequest, ESurl());
-		String response = service.lastHello();
+		final HelloService service = new HelloService(elasticSearchURL());
+		service.sayHello(jsonRequest);
 
 		// then
+		refreshIndex("example");
+		final String response = service.lastHello();
+
 		assertTrue(response.contains("world"));
 	}
 

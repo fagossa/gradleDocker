@@ -2,8 +2,9 @@
 
 ## Manually start docker instance
 
-    gradle -q startDockerInstance
+gradle -q startES
 
 ## Manually stop docker instance
 
-    gradle -q stopDockerInstance
+gradle -q stopES
+

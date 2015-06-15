@@ -7,6 +7,8 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import static com.docker.test.RestApiConsumer.POST;
+
 public class ESTestRegistry {
 
 	protected static final String DEFAULT_HOST = "localhost";
@@ -41,39 +43,39 @@ public class ESTestRegistry {
 		return "http://" + host + ":" + port;
 	}
 
-	public static String ESurl() {
+	public String elasticSearchURL() {
 		String host = DEFAULT_HOST;
 		final Runtime rt = Runtime.getRuntime();
-		final String[] commands = {"boot2docker", "ip"};
 		try {
-			final Process proc = rt.exec(commands);
+			final Process proc = rt.exec("boot2docker ip");
+			int retVal = proc.waitFor();
 			final BufferedReader stdInput = new BufferedReader(new
 					InputStreamReader(proc.getInputStream()));
-			String response = stdInput.readLine();
+			final String response = stdInput.readLine();
 			if (response != null) {
 				host = response;
 			}
-		} catch (IOException e) {
+		} catch (Exception e) {
 			// ignoring error
+			e.printStackTrace();
 		}
 		return composeUrl(host, ES_PORT);
 	}
 
-	protected static void waitForESAvailability(int retry) {
+	protected void waitForESAvailability(int retry) {
 		if (retry <= 0) {
 			return;
 		}
 		HttpURLConnection connection = null;
 		try {
-			connection = (HttpURLConnection) new URL(ESurl()).openConnection();
+			connection = (HttpURLConnection) new URL(elasticSearchURL()).openConnection();
 			connection.setRequestMethod("HEAD");
 			int responseCode = connection.getResponseCode();
-			if (responseCode != 200) {
-				System.out.println("====> NOT OK " + responseCode);
-				//waitForESAvailability(retry - 1);
+			if (responseCode == 200) {
+				System.out.println("====> Elasticsearch is available :)");
 			}
 		} catch (Exception e) {
-			System.out.println("...waiting for ES");
+			System.out.println("...waiting for ES, error: " + e.getMessage());
 			try { Thread.sleep(500); } catch (InterruptedException e1) {}
 			waitForESAvailability(retry - 1);
 		} finally {
@@ -81,6 +83,13 @@ public class ESTestRegistry {
 				connection.disconnect();
 			}
 		}
+	}
+
+	protected void refreshIndex(String index) {
+		final RestApiConsumer consumer = new RestApiConsumer();
+		try {
+			consumer.execute(POST, elasticSearchURL() + "/" + index + "/_refresh", "");
+		} catch (Exception e) {}
 	}
 
 }

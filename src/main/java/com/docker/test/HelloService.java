@@ -1,26 +1,26 @@
 package com.docker.test;
 
-import org.apache.commons.lang3.builder.ToStringBuilder;
-
 import java.util.Objects;
+
+import static com.docker.test.RestApiConsumer.POST;
 
 public class HelloService {
 
-	private final String jsonRequest;
 	private final RestApiConsumer consumer;
 	private final String urlPrefix;
 
-	public HelloService(String jsonRequest, String serviceAddress) throws Exception {
-		Objects.requireNonNull(jsonRequest);
+	public HelloService(String serviceAddress) throws Exception {
 		Objects.requireNonNull(serviceAddress);
-
 		consumer = new RestApiConsumer();
-		consumer.execute(consumer.POST, serviceAddress + "/example/toto", jsonRequest);
 		this.urlPrefix = serviceAddress;
-		this.jsonRequest = jsonRequest;
 	}
 
-	String lastHello() throws Exception {
+	public void sayHello(String jsonRequest) throws Exception {
+		Objects.requireNonNull(jsonRequest);
+		consumer.execute(POST, urlPrefix + "/example/toto", jsonRequest);
+	}
+
+	public String lastHello() {
 		final String query = "{\n" +
 				"    \"query\": {\n" +
 				"        \"query_string\": {\n" +
@@ -28,16 +28,15 @@ public class HelloService {
 				"        }\n" +
 				"    }\n" +
 				"}";
-		consumer.execute(consumer.POST, urlPrefix + "/_search", query);
-		String response = consumer.getResponse();
+		String response = "";
+		try {
+			consumer.execute(POST, urlPrefix + "/example/_search", query);
+			response = consumer.getResponse();
+		} catch (Exception e) {
+			// ignore
+		}
 		return response != null ? response : "";
-	}
 
-	@Override
-	public String toString() {
-		return new ToStringBuilder(this).
-				append("name", jsonRequest).
-				toString();
 	}
 
 }

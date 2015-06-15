@@ -7,10 +7,6 @@ mainClassName = 'com.docker.test.SayHello'
 sourceCompatibility = 1.8
 version = '1.0'
 
-task wrapper(type: Wrapper) {
-    gradleVersion = "2.4"
-}
-
 repositories {
     mavenCentral()
 }
@@ -22,11 +18,17 @@ dependencies {
 
 }
 
-test {
+test  {
+    println '===> Executing test'
     testLogging {
         showStandardStreams = true
         events "passed", "skipped", "failed", "standardOut", "standardError"
     }
+}
+
+// NO-cache: check for updates every build
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
 }
 
 task uberjar(type: Jar, dependsOn: [':compileJava']) {
@@ -38,13 +40,11 @@ task uberjar(type: Jar, dependsOn: [':compileJava']) {
     }
 }
 
-
 task stopES(type: StopDockerTask) << {
     println '==============='
     println '=== stopES ===='
     println '==============='
 
-    imgName = 'testElastic'
 }
 
 class StopDockerTask extends DefaultTask {
@@ -58,7 +58,6 @@ class StopDockerTask extends DefaultTask {
         procPS.waitFor()
         println "===> Stoping $imgName with id=$sout"
         if (sout) {
-            println "===> Stoping $imgName with id=$sout"
             def procST = "docker stop $sout".execute()
             procST.consumeProcessOutput(sout, serr)
             procST.waitFor()
@@ -70,7 +69,6 @@ class StopDockerTask extends DefaultTask {
     }
 }
 
-//task startES(dependsOn: [":compileTestJava"]) << {
 task startES << {
     println '==============='
     println '=== startES ==='
@@ -84,30 +82,4 @@ task startES << {
     println "Started image $imgStartName with id $sout"
 }
 
-// task dependency management
-startES.dependsOn processTestResources
-testClasses.mustRunAfter startES
-
-/*
-test << {
-    // show standard out and standard error of the test JVM(s) on the console
-    testLogging.showStandardStreams = true
-
-    // set JVM arguments for the test JVM(s)
-    jvmArgs '-XX:MaxPermSize=256m'
-
-    // listen to events in the test execution lifecycle
-    beforeTest { descriptor ->
-        logger.lifecycle("Running test: " + descriptor)
-    }
-}
-
-
-tasks.withType(Test) {
-    testLogging {
-        events 'started', 'passed'
-    }
-}
-*/
-
-//startES.finalizedBy stopES
+test.dependsOn startES

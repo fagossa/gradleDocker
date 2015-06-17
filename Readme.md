@@ -10,7 +10,7 @@ As you might already know it, docker containers are great for easy setup environ
 
 We are going to make _gradle task_ to start and stop any kind of docker image. For example, to start an _elasticsearch_ we could do something like this in our __build.gradle__:
 
-```
+```groovy
 task startES << {
     def imgName = "testElastic"
     def sout = new StringBuffer(), serr = new StringBuffer()
@@ -27,9 +27,9 @@ There are two important things to note:
 
 Obviously, we need to stop our instance. This case however is more complex as we need to define some generic benahiour for all instances. We could implement this kind of logic like this:
 
-```
+```groovy
 class StopDockerTask extends DefaultTask {
-    String imgName = 'testElastic'
+    def imgName = 'testElastic'
     @TaskAction
     def stopContainer() {
         def sout = new StringBuffer(), serr = new StringBuffer()
@@ -51,7 +51,7 @@ class StopDockerTask extends DefaultTask {
 
 Then, we simply override the image name specified to run the image:
 
-```
+```groovy
 task stopES(type: StopDockerTask) << {
   String imgName = 'testElastic'
 }
@@ -83,7 +83,7 @@ Just type this:
 
 Manually start our task is helpful because it avoids the need of installing everything, however, wouldn't it be nice to automagically start everything? well, actually we can; we just need to fix the dependencies of the _test_ task. Thas it!!!
 
-```
+```groovy
 task startMyToolTask {
  ...
 }

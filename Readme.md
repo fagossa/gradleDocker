@@ -71,7 +71,7 @@ task stopES(type: StopDockerTask) << {
 
 ### So again, what is the whole sequence?
 
-This type this:
+Just type this:
 
 ```
 > gradle -q startES
@@ -89,4 +89,10 @@ task startMyToolTask {
 }
 
 test.dependsOn startMyToolTask
+```
+
+And just call the _test task_
+
+```
+> gradle clean test
 ```

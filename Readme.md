@@ -1,4 +1,5 @@
-# Integration tests
+Integration tests
+====================
 
 If you do integration test in your local environment you centainly been in a lot of problems installing all the needed software. Most of the times (specially on large systems) you install tools that you only needed in the test and you never use in your daily work. And even with _homebrew_ your path is going to be polluted.
 

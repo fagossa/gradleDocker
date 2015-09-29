@@ -7,7 +7,7 @@ data-dir/
 .mtj.tmp/
 
 # Package Files #
-*.jar
+#*.jar
 *.war
 *.ear
 
@@ -53,5 +53,3 @@ build/
 
 # Ignore Gradle GUI config
 gradle-app.setting
-
-
